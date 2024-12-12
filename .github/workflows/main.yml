@@ -1,0 +1,46 @@
+name: Convert build files to APK and upload to GitHub Artifacts
+
+on:
+  workflow_dispatch: # Allows manual triggering via API
+    inputs:
+      build-folder-path:
+        description: 'Path to build folder'
+        required: true
+        default: 'build'
+      app-name:
+        description: 'Name of the App'
+        required: true
+        default: 'MyApp'
+      output-folder-path:
+        description: 'Path to output folder'
+        required: true
+        default: 'apk'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '16.x'
+        cache: 'npm'
+
+    - run: npm install
+    - run: npm run build
+
+    - name: Convert Website to APK
+      uses: darkshredder/web-to-app-action@main
+      with:
+        build-folder-path: ${{ github.event.inputs.build-folder-path }}
+        app-name: ${{ github.event.inputs.app-name }}
+        output-folder-path: ${{ github.event.inputs.output-folder-path }}
+    
+    - name: Upload APK Artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: Final-apks
+        path: ${{ github.event.inputs.output-folder-path }}
